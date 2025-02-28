@@ -1,0 +1,105 @@
+<?php
+
+// Validate GTM container ID format
+function isValidGtmContainerId($gtmContainerId) {
+    return preg_match('/^GTM-[A-Z0-9]{6,}$/', $gtmContainerId);
+}
+
+// Simulated configuration (Replace with database or config file if needed)
+$data = [
+'allowedContainerIds' => [
+        ['gtm_container_id' => 'GTM-PG97KRW6']
+    ]
+];
+
+$httpEndpoint = 'https://www.googletagmanager.com/gtm.js?fps=s';
+
+// Get query parameters
+$queryParameters = $_GET;
+$gtmContainerId = $queryParameters['id'] ?? '';
+
+// Optional parameters
+$gtmAuth = $queryParameters['gtm_auth'] ?? null;
+$gtmPreview = $queryParameters['gtm_preview'] ?? null;
+$gtmDebug = $queryParameters['gtm_debug'] ?? null;
+$gtmDatalayerName = $queryParameters['l'] ?? 'dataLayer';
+
+// Validate GTM container ID format
+if (!$gtmContainerId || !isValidGtmContainerId($gtmContainerId)) {
+    http_response_code(400); // Bad Request
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => 'Bad Request',
+        'message' => 'Invalid GTM container ID format. It must start with "GTM-" followed by alphanumeric characters.',
+]);
+    exit;
+}
+
+// Validate if container ID is allowed
+$allowedContainerIds = array_column($data['allowedContainerIds'], 'gtm_container_id');
+
+// Throw error if container ID is not allowed
+if (!in_array($gtmContainerId, $allowedContainerIds)) {
+    http_response_code(403); // Forbidden
+    header('Content-Type: application/json');
+    echo json_encode([
+        'error' => 'Forbidden',
+        'message' => 'The provided GTM container ID is not allowed.',
+    ]);
+    exit;
+}
+
+// Check if the URL already has query parameters
+$httpEndpoint .= (parse_url($httpEndpoint, PHP_URL_QUERY) ? '&' : '?');
+
+// Construct GTM URL
+$url = "{$httpEndpoint}id={$gtmContainerId}&l={$gtmDatalayerName}";
+
+// Append optional parameters if provided
+if ($gtmAuth) $url .= "&gtm_auth=" . urlencode($gtmAuth);
+if ($gtmPreview) $url .= "&gtm_preview=" . urlencode($gtmPreview);
+if ($gtmDebug) $url .= "&gtm_debug=" . urlencode($gtmDebug);
+
+// Fetch the script via cURL
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_TIMEOUT, 2);
+curl_setopt($ch, CURLOPT_HEADER, true);
+
+$response = curl_exec($ch);
+if ($response === false) {
+    http_response_code(500);
+    echo "cURL Error: " . curl_error($ch);
+    curl_close($ch);
+    exit;
+}
+
+$headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+$headers = substr($response, 0, $headerSize);
+$body = substr($response, $headerSize);
+curl_close($ch);
+
+http_response_code($httpCode);
+header("Content-Type: application/javascript");
+
+// Filter headers (Exclude expires and date headers)
+$headerLines = explode("\r\n", $headers);
+foreach ($headerLines as $header) {
+    if (!empty($header) && stripos($header, 'expires') === false && stripos($header, 'date') === false) {
+        header($header);
+    }
+}
+
+// Handle CORS
+if (!empty($_SERVER['HTTP_ORIGIN'])) {
+    header("Access-Control-Allow-Origin: " . $_SERVER['HTTP_ORIGIN']);
+    header("Access-Control-Allow-Credentials: true");
+}
+
+// Output the GTM script
+echo $body;
+
+?>
+

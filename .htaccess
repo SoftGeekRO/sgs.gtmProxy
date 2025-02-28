@@ -1,0 +1,31 @@
+<IfModule mod_headers.c>
+# setup Proxy TachoGeek header
+Header always add X-SGS "SoftGeek Romania - Google Tag Manager Proxy"
+
+</IfModule>
+
+<IfModule mod_rewrite.c>
+
+# SEO URL Settings
+RewriteEngine On
+
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+RewriteRule ^\.htaccess$ - [F]
+## Prevent loops by excluding gtm.php
+#RewriteCond %{REQUEST_URI} !^/gtm.php [NC]
+#
+## Rewrite gtm.js to gtm.php (query string is optional)
+#RewriteRule ^gtm\.js$ gtm.php [QSA,L]
+#
+## Check if HTTP_REFERER is set and contains query parameters
+#RewriteCond %{HTTP_REFERER} !=""
+#RewriteCond %{HTTP_REFERER} \?(.*) [NC]
+
+# Capture query parameters from the referrer and append them
+RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
+RewriteRule ^(.*)$ $1?%{QUERY_STRING}&%2 [R=302,L]
+
+</IfModule>

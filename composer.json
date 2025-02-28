@@ -1,0 +1,11 @@
+{
+  "autoload": {
+    "psr-4": {
+      "SGS\\": "src/"
+    }
+  },
+  "require": {
+    "ext-curl": "*",
+    "vlucas/phpdotenv": "^v5.6.1"
+  }
+}
