@@ -1,6 +1,6 @@
 <?php
 
-namespace SGS\Controllers;
+namespace PROXY\Controllers;
 
 
 class Analytics {

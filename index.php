@@ -1,25 +1,14 @@
 <?php
 
 require 'vendor/autoload.php';
+require __DIR__ . '/sgs.framework/src/Config/bootstrap.php';
 
-use \Dotenv\Dotenv;
-use SGS\Application;
-use SGS\Lib\Config;
-use SGS\Lib\Router;
+use SGS\Core\Application;
 
-$dotenv = Dotenv::createImmutable(__DIR__); // Path to .env directory
-$dotenv->load();
-
-// Load configuration
-Config::load(__DIR__ . '/config/app.php');
-
-// Create the router
-$router = new Router();
-
-$app = new Application($router);
+$app = new Application();
 $app->run();
 
-// Flush the output buffer
+//Flush the output buffer
 if (ob_get_level() > 0) {
     ob_end_flush();
 }

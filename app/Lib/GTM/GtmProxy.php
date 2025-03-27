@@ -1,9 +1,8 @@
 <?php
 
-namespace SGS\GTM;
+namespace PROXY\Lib\GTM;
 
-use SGS\Lib\Config;
-use SGS\Lib\Logger;
+use SGS\Config\Config;
 
 class GtmProxy {
     private string $httpEndpoint = 'https://www.googletagmanager.com/gtm.js';
@@ -132,9 +131,6 @@ class GtmProxy {
 
     public function handleRequest(): void {
 
-//        if ($this->getRequestPath() !== $this->pathname) {
-//            return;
-//        }
         $queryParameters = $this->getRequestQueryParameters();
 
         if (empty($queryParameters['id'])) {

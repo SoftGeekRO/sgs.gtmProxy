@@ -1,0 +1,3 @@
+[submodule "sgs.framework"]
+	path = sgs.framework
+	url = https://github.com/SoftGeekRO/sgs.framework.git

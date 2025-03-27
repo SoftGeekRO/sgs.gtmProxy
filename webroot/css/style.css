@@ -1,0 +1,113 @@
+.error-container {
+    max-width: 1000px;
+    margin: 2rem auto;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+.error-header {
+    color: #dc3545;
+    border-bottom: 2px solid #dc3545;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+.error-card {
+    background: #f8f9fa;
+    border-left: 4px solid #dc3545;
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+    border-radius: 0 4px 4px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.error-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.error-meta-item strong {
+    display: block;
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+.error-meta-item span {
+    color: #212529;
+    word-break: break-all;
+}
+.trace-toggle {
+    color: #007bff;
+    cursor: pointer;
+    user-select: none;
+    margin: 1rem 0 0.5rem;
+    display: inline-block;
+}
+.trace-toggle::after {
+    content: "▼";
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    display: inline-block;
+    transition: transform 0.2s;
+}
+.trace-toggle.collapsed::after {
+    transform: rotate(-90deg);
+}
+.stack-trace {
+    display: none;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    font-family: 'Courier New', monospace;
+    font-size: 0.875rem;
+}
+.stack-trace.show {
+    display: block;
+}
+.trace-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed #e9ecef;
+}
+.trace-item:last-child {
+    border-bottom: none;
+}
+.trace-file {
+    color: #6c757d;
+}
+.trace-call {
+    color: #212529;
+    font-weight: bold;
+}
+.error-count {
+    background: #dc3545;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    margin-left: 0.5rem;
+}
+
+.trace-item {
+    background: #f8f9fa;
+    padding: 10px;
+    margin-bottom: 5px;
+    border-left: 3px solid #dc3545;
+}
+
+.trace-file {
+    font-weight: bold;
+    color: #333;
+}
+
+.trace-call {
+    color: #007bff;
+}
+
+.trace-args {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.trace-string {
+    background: #eee;
+    padding: 10px;
+    border-radius: 5px;
+}
