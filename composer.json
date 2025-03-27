@@ -17,8 +17,8 @@
     }
   ],
   "support": {
-    "issues": "https://github.com/SoftGeekRO/gtmProxy/issues",
-    "source": "https://github.com/SoftGeekRO/gtmProxy"
+    "issues": "https://github.com/SoftGeekRO/sgs.gtmProxy/issues",
+    "source": "https://github.com/SoftGeekRO/sgs.gtmProxy"
   },
   "autoload": {
     "psr-4": {
