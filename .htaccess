@@ -40,10 +40,38 @@ FileETag None
 
 </IfModule>
 
+<IfModule mod_headers.c>
+# Environment variable for Referer domain
+SetEnvIf Referer "^https?://([^/]+)" HTTP_REFERER_DOMAIN=$1
+# CORS headers if needed
+Header always set Access-Control-Allow-Origin "https://tachogeek.ro"
+Header always set Access-Control-Expose-Headers "X-Debug-*"
+</IfModule>
+
 <IfModule mod_rewrite.c>
 
 # SEO URL Settings
 RewriteEngine On
+
+## Check if HTTP_REFERER is set and contains query parameters
+RewriteCond %{HTTP_REFERER} !=""
+RewriteCond %{HTTP_REFERER} \?(.*) [NC]
+# Capture query parameters from the referrer and append them
+RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
+RewriteRule ^(.*)$ $1?%{QUERY_STRING}&%2 [R=302,L]
+
+# Check if HTTP_REFERER is present and non-empty
+RewriteCond %{HTTP_REFERER} .+ [NC]
+RewriteRule ^ - [E=REFERER_STATUS:present]
+
+# Check if HTTP_REFERER is empty or not sent
+RewriteCond %{HTTP_REFERER} ^$ [OR]
+RewriteCond %{HTTP_REFERER} ^-?$ [NC]
+RewriteRule ^ - [E=REFERER_STATUS:empty-or-not-sent]
+
+# Set a custom debug header based on the REFERER_STATUS variable
+Header always set X-Referer-Debug "Referer is %{REFERER_STATUS}e" env=REFERER_STATUS
+Header always set X-Referer-Debug-content "Referer is %{HTTP_REFERER}e" env=REFERER_STATUS
 
 RewriteRule ^\.htaccess$ - [F]
 
@@ -73,20 +101,6 @@ RewriteRule ^$ webroot/ [L]
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
-
-## Prevent loops by excluding gtm.php
-#RewriteCond %{REQUEST_URI} !^/gtm.php [NC]
-
-## Rewrite gtm.js to gtm.php (query string is optional)
-#RewriteRule ^gtm\.js$ gtm.php [QSA,L]
-
-## Check if HTTP_REFERER is set and contains query parameters
-RewriteCond %{HTTP_REFERER} !=""
-RewriteCond %{HTTP_REFERER} \?(.*) [NC]
-
-# Capture query parameters from the referrer and append them
-RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
-RewriteRule ^(.*)$ $1?%{QUERY_STRING}&%2 [R=302,L]
 
 # Force to request 200 for options
 RewriteCond %{REQUEST_METHOD} OPTIONS

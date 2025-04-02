@@ -10,6 +10,12 @@ return [
         'absolutePath' => false,
     ],
     'debug' => filter_var(env('DEBUG', true), FILTER_VALIDATE_BOOLEAN), // Set to false in production
+    'logs' => [
+        'default' => [
+            'channel' => 'app',
+            'format' => 'json',
+        ],
+    ],
     'middleware' => [
         //\SGS\Middleware\ErrorMiddleware::class
     ]];

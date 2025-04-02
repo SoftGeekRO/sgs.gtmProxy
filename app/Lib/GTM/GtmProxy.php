@@ -22,6 +22,8 @@ class GtmProxy {
     }
 
     private function getRequestQueryParameters(): array {
+
+        //parse_str(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY), $queries);
         return $_GET;
     }
 
@@ -78,6 +80,7 @@ class GtmProxy {
     private function sendJsonError($statusCode, $message): void {
         $this->setResponseStatus($statusCode);
         $this->setResponseHeader('Content-Type', 'application/json');
+        //$this->setResponseHeader('Content-Type', 'text/html; charset=utf-8');
         $this->setResponseBody(json_encode([
             'error' => true,
             'message' => $message
