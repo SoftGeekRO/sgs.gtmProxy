@@ -53,26 +53,6 @@ Header always set Access-Control-Expose-Headers "X-Debug-*"
 # SEO URL Settings
 RewriteEngine On
 
-## Check if HTTP_REFERER is set and contains query parameters
-RewriteCond %{HTTP_REFERER} !=""
-RewriteCond %{HTTP_REFERER} \?(.*) [NC]
-# Capture query parameters from the referrer and append them
-RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
-RewriteRule ^(.*)$ $1?%{QUERY_STRING}&%2 [R=302,L]
-
-# Check if HTTP_REFERER is present and non-empty
-RewriteCond %{HTTP_REFERER} .+ [NC]
-RewriteRule ^ - [E=REFERER_STATUS:present]
-
-# Check if HTTP_REFERER is empty or not sent
-RewriteCond %{HTTP_REFERER} ^$ [OR]
-RewriteCond %{HTTP_REFERER} ^-?$ [NC]
-RewriteRule ^ - [E=REFERER_STATUS:empty-or-not-sent]
-
-# Set a custom debug header based on the REFERER_STATUS variable
-Header always set X-Referer-Debug "Referer is %{REFERER_STATUS}e" env=REFERER_STATUS
-Header always set X-Referer-Debug-content "Referer is %{HTTP_REFERER}e" env=REFERER_STATUS
-
 RewriteRule ^\.htaccess$ - [F]
 
 # Debug the CORS origin
@@ -101,6 +81,22 @@ RewriteRule ^$ webroot/ [L]
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+### Check if HTTP_REFERER is set and contains query parameters
+#RewriteCond %{HTTP_REFERER} !=""
+#RewriteCond %{HTTP_REFERER} \?(.*) [NC]
+## Capture query parameters from the referrer and append them
+#RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
+#RewriteRule ^(.*)$ $1?%{QUERY_STRING}&%2 [R=302,L]
+
+# Check if HTTP_REFERER is set and contains query parameters, only for specific JS files
+RewriteCond %{REQUEST_URI} ^/(sgs-data-layer.js|tracker|utils)\.js$ [NC]
+RewriteCond %{HTTP_REFERER} !=""
+RewriteCond %{HTTP_REFERER} \?(.*) [NC]
+# Capture query parameters from the referrer
+RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
+# Append referrer query parameters to the request
+RewriteRule ^/(sgs-data-layer.js|tracker|utils)\.js$ $0?%{QUERY_STRING}&%2 [R=302,L]
 
 # Force to request 200 for options
 RewriteCond %{REQUEST_METHOD} OPTIONS
