@@ -17,35 +17,36 @@ IndexOptions +Charset=UTF-8
 DirectoryIndex index.php index.html
 
 <IfModule mod_headers.c>
-# Enable cross domain access control
-SetEnvIf Origin "^http(s)?:\/\/(www\.)?([a-z0-9]+[.])*(sgsolar\.ro|progeek\.ro|softgeek\.ro|tachogeek\.ro|acronmanagement\.com|localhost(?::\d{1,5})?)$" REQUEST_ORIGIN=$0
-Header always set Access-Control-Allow-Origin %{REQUEST_ORIGIN}e env=REQUEST_ORIGIN
-Header always set Access-Control-Allow-Credentials true
-Header always set Access-Control-Allow-Methods "POST, PUT, PATCH, GET, DELETE, OPTIONS"
-Header always set Access-Control-Allow-Headers "origin, x-requested-with, content-type"
-Header always set Referrer-Policy "no-referrer"
+    # Enable cross domain access control
+    SetEnvIfNoCase Origin "^(https?://(localhost(:[0-9]+)?|([a-z0-9.-]+\.)?(softgeek\.ro|tachogeek\.ro|sgsolar\.ro|progeek\.ro|acronmanagement\.com)))$" ACCESS_CONTROL_ALLOW_ORIGIN=$0
+    Header always set Access-Control-Allow-Origin "%{ACCESS_CONTROL_ALLOW_ORIGIN}e" env=ACCESS_CONTROL_ALLOW_ORIGIN
 
-# setup Proxy TachoGeek header
-Header always add X-SGS "SoftGeek Romania - Proxy Google"
+    Header always set Access-Control-Allow-Credentials true
+    Header always set Access-Control-Allow-Methods "POST, PUT, PATCH, GET, DELETE, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization"
+    #Header always set Referrer-Policy "no-referrer"
 
-# Clickjacking Attack
-Header always append X-Frame-Options SAMEORIGIN
+    # setup Proxy TachoGeek header
+    Header always add X-SGS "SoftGeek Romania - Proxy Google"
 
-# CX-XSS Protection
-Header set X-XSS-Protection "1; mode=block"
+    # Clickjacking Attack
+    Header always append X-Frame-Options SAMEORIGIN
 
-Header unset X-Powered-By
-Header unset ETag
+    # CX-XSS Protection
+    Header set X-XSS-Protection "1; mode=block"
+
+    Header unset X-Powered-By
+    Header unset ETag
 FileETag None
 
 </IfModule>
 
 <IfModule mod_headers.c>
-# Environment variable for Referer domain
-SetEnvIf Referer "^https?://([^/]+)" HTTP_REFERER_DOMAIN=$1
-# CORS headers if needed
-Header always set Access-Control-Allow-Origin "https://tachogeek.ro"
-Header always set Access-Control-Expose-Headers "X-Debug-*"
+    # Environment variable for Referer domain
+    SetEnvIf Referer "^https?://([^/]+)" HTTP_REFERER_DOMAIN=$1
+    # CORS headers if needed
+    Header always set Access-Control-Allow-Origin "https://tachogeek.ro"
+    Header always set Access-Control-Expose-Headers "X-Debug-*"
 </IfModule>
 
 <IfModule mod_rewrite.c>
@@ -54,53 +55,52 @@ Header always set Access-Control-Expose-Headers "X-Debug-*"
 RewriteEngine On
 
 RewriteRule ^\.htaccess$ - [F]
+    # Debug the CORS origin
+    #RewriteRule .* - [E=ORIGIN_ALLOWED:%1]
+    #Header always set X-Debug-Origin "%{ORIGIN_ALLOWED}e" env=ORIGIN_ALLOWED
 
-# Debug the CORS origin
-#RewriteRule .* - [E=ORIGIN_ALLOWED:%1]
-#Header always set X-Debug-Origin "%{ORIGIN_ALLOWED}e" env=ORIGIN_ALLOWED
+    # Redirect root domain to webroot/ if no specific file is requested
+    RewriteCond %{REQUEST_URI} ^/?$ [NC]
+    RewriteRule ^$ / [R=301,L]
 
-# Redirect root domain to webroot/ if no specific file is requested
-RewriteCond %{REQUEST_URI} ^/?$ [NC]
-RewriteRule ^$ / [R=301,L]
+    RewriteCond %{REQUEST_FILENAME} -f
+    RewriteCond %{REQUEST_URI} \.(txt|ico|png|jpg|jpeg|gif|css|js|xml|webmanifest)$ [NC]
+    RewriteRule ^ - [L]
 
-RewriteCond %{REQUEST_FILENAME} -f
-RewriteCond %{REQUEST_URI} \.(txt|ico|png|jpg|jpeg|gif|css|js|xml|webmanifest)$ [NC]
-RewriteRule ^ - [L]
+    # Allow access to the ".well-known" directory (for SSL certificates, etc.)
+    RewriteRule ^(\.well-known/.*)$ $1 [L]
 
-# Allow access to the ".well-known" directory (for SSL certificates, etc.)
-RewriteRule ^(\.well-known/.*)$ $1 [L]
+    # Redirect requests for static assets to the webroot folder (without exposing 'webroot' in the URL)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(css|js|fonts|assets|img)/(.*)$ webroot/$1/$2 [L,QSA]
 
-# Redirect requests for static assets to the webroot folder (without exposing 'webroot' in the URL)
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^(css|js|fonts|assets|img)/(.*)$ webroot/$1/$2 [L,QSA]
+    # Redirect root requests to the webroot folder
+    RewriteRule ^$ webroot/ [L]
 
-# Redirect root requests to the webroot folder
-RewriteRule ^$ webroot/ [L]
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
 
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+    ### Check if HTTP_REFERER is set and contains query parameters
+    #RewriteCond %{HTTP_REFERER} !=""
+    #RewriteCond %{HTTP_REFERER} \?(.*) [NC]
+    ## Capture query parameters from the referrer and append them
+    #RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
+    #RewriteRule ^(.*)$ $1?%{QUERY_STRING}&%2 [R=302,L]
 
-### Check if HTTP_REFERER is set and contains query parameters
-#RewriteCond %{HTTP_REFERER} !=""
-#RewriteCond %{HTTP_REFERER} \?(.*) [NC]
-## Capture query parameters from the referrer and append them
-#RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
-#RewriteRule ^(.*)$ $1?%{QUERY_STRING}&%2 [R=302,L]
+    # Check if HTTP_REFERER is set and contains query parameters, only for specific JS files
+    RewriteCond %{REQUEST_URI} ^/(sgs-data-layer.js|tracker|utils)\.js$ [NC]
+    RewriteCond %{HTTP_REFERER} !=""
+    RewriteCond %{HTTP_REFERER} \?(.*) [NC]
+    # Capture query parameters from the referrer
+    RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
+    # Append referrer query parameters to the request
+    RewriteRule ^/(sgs-data-layer.js|tracker|utils)\.js$ $0?%{QUERY_STRING}&%2 [R=302,L]
 
-# Check if HTTP_REFERER is set and contains query parameters, only for specific JS files
-RewriteCond %{REQUEST_URI} ^/(sgs-data-layer.js|tracker|utils)\.js$ [NC]
-RewriteCond %{HTTP_REFERER} !=""
-RewriteCond %{HTTP_REFERER} \?(.*) [NC]
-# Capture query parameters from the referrer
-RewriteCond %{HTTP_REFERER} ^https?://[^/]+/(.*)\?(.*)$ [NC]
-# Append referrer query parameters to the request
-RewriteRule ^/(sgs-data-layer.js|tracker|utils)\.js$ $0?%{QUERY_STRING}&%2 [R=302,L]
-
-# Force to request 200 for options
-RewriteCond %{REQUEST_METHOD} OPTIONS
-RewriteRule .* / [R=200,L]
+    # Force to request 200 for options
+    RewriteCond %{REQUEST_METHOD} OPTIONS
+    RewriteRule .* / [R=200,L]
 
 </IfModule>
 
